@@ -1,0 +1,355 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CaptureFrame from "../../components/CaptureFrame.astro";
+
+const image = (name: string) => `${import.meta.env.BASE_URL}images/projects/ai-note/${name}`;
+
+const storySteps = [
+  {
+    id: "notes",
+    index: "01",
+    title: "회의가 끝나면 노트가 쌓입니다",
+    body: "녹음하거나 파일을 올린 회의는 노트 카드로 모입니다. 처리 상태, 한 줄 요약, 키워드와 할 일 진행률을 카드에서 바로 확인하고 내용·요약·키워드로 검색합니다.",
+    slot: "AN–01",
+    filename: "ai-note-01-notes.png",
+    frameTitle: "Notes",
+    state: "All notes",
+    alt: "변환 중·후처리 중·변환 완료 상태 배지와 요약, 키워드, 할 일 진행률이 표시된 AI Note 노트 목록 화면",
+  },
+  {
+    id: "record",
+    index: "02",
+    title: "설치 없이 브라우저에서 녹음",
+    body: "제목과 참석자를 정하고 녹음을 시작하면 경과 시간과 입력 레벨이 표시됩니다. 녹음 조각은 브라우저 IndexedDB에 계속 보존되어 탭이 닫히거나 네트워크가 끊겨도 복구할 수 있습니다.",
+    slot: "AN–02",
+    filename: "ai-note-02-recording.png",
+    frameTitle: "Recording",
+    state: "Live · 00:06",
+    alt: "회의 제목·참석자·메모 입력란과 녹음 경과 시간, 입력 레벨, 하단 녹음 제어 바가 표시된 AI Note 녹음 화면",
+  },
+  {
+    id: "processing",
+    index: "03",
+    title: "긴 변환은 요청이 아니라 작업으로",
+    body: "업로드가 끝나면 서버는 즉시 응답하고 변환은 백그라운드 Job으로 넘어갑니다. 화면은 상태를 폴링해 예상 시간과 진행 시간을 보여주며, 페이지를 떠났다 돌아와도 작업은 계속됩니다.",
+    slot: "AN–03",
+    filename: "ai-note-03-processing.png",
+    frameTitle: "Processing",
+    state: "Transcribing",
+    alt: "68분 길이 음성 파일의 텍스트 변환 진행 상태와 예상 변환 시간, 경과 시간을 보여주는 AI Note 처리 화면",
+  },
+  {
+    id: "minutes",
+    index: "04",
+    title: "요약을 넘어 정식 회의록으로",
+    body: "변환이 끝나면 회의 개요, 주요 논의, 결정 사항, 후속 일정으로 구성된 회의록이 생성됩니다. 수정·재작성 후 Markdown으로 내보내거나 사용자 권한으로 Confluence에 게시합니다.",
+    slot: "AN–04",
+    filename: "ai-note-04-minutes.png",
+    frameTitle: "Meeting minutes",
+    state: "Done",
+    alt: "회의 개요, 주요 논의, 결정 사항, 후속 일정이 정리된 회의록 탭과 Markdown 다운로드·Confluence 게시 버튼이 있는 화면",
+  },
+  {
+    id: "admin",
+    index: "05",
+    title: "모델과 보관 정책은 운영 중에 조정",
+    body: "관리자는 변환·요약 모델, 원본 오디오 보관일, 사용자별 노트 상한을 화면에서 바꿉니다. 원본은 기본 3일 뒤 자동 삭제되고 0일로 두면 변환 직후 파기합니다.",
+    slot: "AN–05",
+    filename: "ai-note-05-admin.png",
+    frameTitle: "Admin settings",
+    state: "Models · retention",
+    alt: "음성 변환 모델과 요약 모델 선택, 원본 오디오 보관일 슬라이더, 사용자별 노트 상한 설정이 있는 관리자 화면",
+  },
+].map((step) => ({ ...step, src: image(step.filename) }));
+
+const pipeline = [
+  { label: "녹음 / 업로드", detail: "IndexedDB 조각 보존" },
+  { label: "저장", detail: "Presigned PUT · S3" },
+  { label: "텍스트 변환", detail: "ffmpeg 분할 · STT" },
+  { label: "요약 · 회의록", detail: "LLM 후처리" },
+  { label: "할 일", detail: "담당자 · 기한 추출" },
+];
+
+const decisions = [
+  {
+    index: "01",
+    title: "변환을 HTTP 요청에서 분리",
+    problem: "한 시간짜리 회의를 요청 하나로 변환하면 게이트웨이 타임아웃과 재시도 폭주가 그대로 사용자 실패가 됩니다.",
+    choice: "업로드 완료 시 Job만 생성하고 응답한 뒤, 워커가 다운로드·변환·후처리를 진행하고 화면은 상태를 폴링하게 했습니다.",
+    result: "처리 시간이 길어져도 요청은 짧게 끝나며, 사용자는 페이지를 떠났다 돌아와도 같은 상태를 봅니다.",
+  },
+  {
+    index: "02",
+    title: "DB 기반 동시 실행 슬롯과 heartbeat",
+    problem: "여러 사람이 동시에 회의를 끝내면 외부 API 429, DB 쓰기 경합, 프로세스 과부하가 한꺼번에 발생합니다.",
+    choice: "동시 변환 수를 DB 슬롯으로 제한하고, 점유 중에는 heartbeat를 갱신하며 멈춘 슬롯은 다른 작업이 회수하게 했습니다.",
+    result: "인스턴스가 죽거나 재배포돼도 슬롯이 영구 점유되지 않고, 대기 작업이 자동으로 이어집니다.",
+  },
+  {
+    index: "03",
+    title: "녹음 데이터를 브라우저에 먼저 보존",
+    problem: "회의는 다시 할 수 없기 때문에 탭 종료, 절전, 네트워크 단절로 녹음이 사라지는 것이 가장 치명적인 실패입니다.",
+    choice: "MediaRecorder 조각을 IndexedDB에 계속 기록하고, 다음 접속 때 미완료 녹음을 찾아 업로드를 재개하게 했습니다.",
+    result: "업로드 실패가 녹음 손실로 이어지지 않으며, 복구 흐름이 일반 사용 흐름과 같은 파이프라인을 탑니다.",
+  },
+  {
+    index: "04",
+    title: "엔진·저장소·인증을 어댑터 뒤로",
+    problem: "STT 엔진과 LLM, 사내 인증 정책은 도입 초기부터 바뀔 가능성이 높았습니다.",
+    choice: "STT, Summarizer, Storage, Auth를 인터페이스로 분리하고 관리자 설정이나 환경 변수로 구현체를 선택하게 했습니다.",
+    result: "로컬은 SQLite·파일 저장소·dev 로그인, 운영은 RDS·S3·Entra ID로 같은 코드를 실행합니다.",
+  },
+];
+---
+
+<BaseLayout
+  title="AI Note — Product & Systems Portfolio"
+  description="녹음과 업로드에서 텍스트 변환, 회의록과 할 일까지 이어지는 AI 회의 비서"
+  currentProject="ai-note"
+>
+  <article class="project-page">
+    <header class="project-hero page-pad">
+      <div class="project-hero__top reveal">
+        <p class="eyebrow">03 / AI meeting assistant</p>
+        <span class="status-chip"><i></i> In production · Sanitized</span>
+      </div>
+      <h1 class="reveal reveal--delay-1">AI<br /><em>Note</em></h1>
+      <div class="project-hero__intro reveal reveal--delay-2">
+        <p class="project-lede">녹음 버튼 하나로 텍스트 변환, 회의록과 할 일 정리까지 이어지는 사내 AI 회의 비서.</p>
+        <dl class="project-facts">
+          <div><dt>Role</dt><dd>Product design<br />Full-stack · Infra</dd></div>
+          <div><dt>Stack</dt><dd>Next.js · FastAPI<br />RDS · S3 · OpenAI</dd></div>
+          <div><dt>State</dt><dd>In production<br />Synthetic showcase</dd></div>
+        </dl>
+      </div>
+      <div class="hero-capture reveal reveal--delay-3">
+        <CaptureFrame
+          slot="AN–01"
+          filename="ai-note-01-notes.png"
+          title="AI Note"
+          state="All notes"
+          src={image("ai-note-01-notes.png")}
+          alt="변환 중·후처리 중·변환 완료 상태 배지와 요약, 키워드, 할 일 진행률이 표시된 AI Note 노트 목록 화면"
+          caption="모든 화면은 로컬 환경에 가상 회의 데이터를 넣어 촬영했습니다. 실제 사용자와 회의 내용은 포함하지 않습니다."
+        />
+      </div>
+    </header>
+
+    <section class="context-section page-pad section-rule">
+      <div class="section-index">
+        <p class="eyebrow">01 / Context</p>
+        <span>From manual minutes<br />to an async pipeline</span>
+      </div>
+      <div class="context-copy">
+        <h2>회의록은 매번 필요했지만<br />쓰는 시간은 늘 부족했습니다.</h2>
+        <p>회의가 끝나면 누군가 녹음을 다시 듣고 결정 사항과 할 일을 옮겨 적어야 했습니다. 외부 회의록 서비스는 사내 보안 정책과 맞지 않았고, 긴 회의는 변환 도중 실패하기 쉬웠습니다.</p>
+        <p>AI Note는 사내 SSO 안에서 브라우저 녹음부터 회의록 게시까지 한 흐름으로 처리합니다. 핵심은 긴 AI 작업을 실패 가능한 HTTP 요청이 아니라, 끊겨도 이어지는 비동기 작업으로 다루는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section section-rule" aria-labelledby="walkthrough-heading">
+      <div class="story-heading page-pad">
+        <p class="eyebrow">02 / System walkthrough</p>
+        <h2 id="walkthrough-heading">Press record,<br />get the minutes.</h2>
+      </div>
+
+      <div class="story-layout page-pad" data-story>
+        <div class="story-steps">
+          {storySteps.map((step, index) => (
+            <section
+              class:list={["story-step", { "is-active": index === 0 }]}
+              data-story-step={step.id}
+              tabindex="0"
+            >
+              <span>{step.index}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <small>Scroll to explore</small>
+            </section>
+          ))}
+        </div>
+
+        <div class="story-stage" aria-live="polite">
+          {storySteps.map((step, index) => (
+            <div class:list={["story-visual", { "is-active": index === 0 }]} data-story-visual={step.id}>
+              <CaptureFrame
+                slot={step.slot}
+                filename={step.filename}
+                title={step.frameTitle}
+                state={step.state}
+                src={step.src}
+                alt={step.alt}
+                tone={index === 1 ? "amber" : index === 2 ? "blue" : "sage"}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="decisions-section page-pad section-rule" aria-labelledby="decisions-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">03 / Key decisions</p>
+          <h2 id="decisions-heading">Built to survive<br />long, messy meetings</h2>
+        </div>
+        <p>한 시간이 넘는 회의와 동시 사용자, 불안정한 네트워크를 견디기 위해 내린 네 가지 판단입니다.</p>
+      </div>
+      <ol class="decision-list">
+        {decisions.map((decision) => (
+          <li>
+            <header><span>{decision.index}</span><h3>{decision.title}</h3></header>
+            <div><small>Problem</small><p>{decision.problem}</p></div>
+            <div><small>Choice</small><p>{decision.choice}</p></div>
+            <div><small>Result</small><p>{decision.result}</p></div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="architecture-section page-pad section-rule" aria-labelledby="architecture-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">04 / Architecture</p>
+          <h2 id="architecture-heading">One pipeline,<br />swappable engines</h2>
+        </div>
+        <p>브라우저는 짧은 요청만 보내고, 무거운 변환과 후처리는 슬롯으로 제한된 워커가 담당합니다. 엔진과 저장소는 어댑터 뒤에 있습니다.</p>
+      </div>
+      <figure class="architecture-figure">
+        <div class="architecture-figure__heading">
+          <span>Processing pipeline</span>
+          <span>Upload → job → poll</span>
+        </div>
+        <svg viewBox="0 0 1040 460" role="img" aria-labelledby="ainote-arch-title ainote-arch-desc">
+          <title id="ainote-arch-title">AI Note 시스템 구조</title>
+          <desc id="ainote-arch-desc">브라우저가 Next.js 프록시를 거쳐 FastAPI에 업로드 티켓을 요청하고 S3에 직접 업로드한 뒤, Job 워커가 STT와 LLM 어댑터로 변환과 요약을 수행하고 결과를 데이터베이스에 저장하는 구조</desc>
+          <defs>
+            <marker id="ainote-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <g class="architecture-lines" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ainote-arrow)">
+            <path d="M210 200 H320" />
+            <path d="M120 290 V400 H720" />
+            <path d="M590 200 H720" />
+            <path d="M590 270 H660 V330 H720" />
+          </g>
+          <g class="architecture-node architecture-node--client">
+            <rect x="30" y="120" width="180" height="170" rx="4" />
+            <text x="55" y="160" class="node-kicker">CLIENT</text>
+            <text x="55" y="200" class="node-title">Browser</text>
+            <text x="55" y="230" class="node-copy">Record · upload</text>
+            <text x="55" y="254" class="node-copy">IndexedDB recovery</text>
+          </g>
+          <g class="architecture-node architecture-node--core">
+            <rect x="320" y="60" width="270" height="250" rx="4" />
+            <text x="350" y="100" class="node-kicker">APPLICATION</text>
+            <text x="350" y="140" class="node-title">Next.js → FastAPI</text>
+            <text x="350" y="172" class="node-copy">SSO session · upload ticket</text>
+            <line x1="350" y1="194" x2="560" y2="194" />
+            <text x="350" y="226" class="node-copy">Job worker · DB slots</text>
+            <text x="350" y="250" class="node-copy">Heartbeat · stale reclaim</text>
+            <text x="350" y="274" class="node-copy">Status polling API</text>
+          </g>
+          <g class="architecture-node">
+            <rect x="720" y="40" width="290" height="230" rx="4" />
+            <text x="750" y="80" class="node-kicker">ADAPTERS</text>
+            <text x="750" y="120" class="node-title">Engines</text>
+            <text x="750" y="154" class="node-copy">STTEngine · Summarizer</text>
+            <text x="750" y="178" class="node-copy">AuthProvider · Storage</text>
+            <text x="750" y="202" class="node-copy">Confluence (user OAuth)</text>
+          </g>
+          <g class="architecture-node">
+            <rect x="720" y="300" width="290" height="130" rx="4" />
+            <text x="750" y="340" class="node-kicker">STATE</text>
+            <text x="750" y="378" class="node-title">RDS · S3</text>
+            <text x="750" y="404" class="node-copy">Notes · transcripts · minutes · raw audio</text>
+          </g>
+        </svg>
+        <figcaption>원본 오디오는 Presigned URL로 S3에 직접 올라가고, 변환이 끝나면 보관 정책에 따라 자동 삭제됩니다. 결과 텍스트·회의록·할 일만 데이터베이스에 남습니다.</figcaption>
+      </figure>
+      <ol class="pipeline-strip" aria-label="처리 단계">
+        {pipeline.map((stage, index) => (
+          <li>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{stage.label}</strong>
+            <small>{stage.detail}</small>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="evidence-section page-pad section-rule">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">05 / Evidence</p>
+          <h2>What is implemented</h2>
+        </div>
+      </div>
+      <dl class="evidence-grid">
+        <div><dt>05</dt><dd>Pipeline stages</dd><small>Record · store · STT · minutes · todo</small></div>
+        <div><dt>04</dt><dd>Swappable adapters</dd><small>STT · summarizer · storage · auth</small></div>
+        <div><dt>3s</dt><dd>Chunk overlap</dd><small>Long audio split with tail coverage check</small></div>
+        <div><dt>0–30</dt><dd>Raw audio retention days</dd><small>0 = delete right after transcription</small></div>
+      </dl>
+      <p class="evidence-note">사내 서비스로 운영 중이며, 이 페이지의 화면과 회의 내용은 모두 공개용으로 만든 가상 데이터입니다.</p>
+    </section>
+
+    <a class="next-project page-pad section-rule" href={import.meta.env.BASE_URL}>
+      <span class="eyebrow">Back to index</span>
+      <strong>Explore selected systems</strong>
+      <i aria-hidden="true">↗</i>
+    </a>
+  </article>
+
+  <style>
+    .pipeline-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      margin: 2rem 0 0;
+      padding: 0;
+      list-style: none;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .pipeline-strip li {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem;
+      background: var(--surface);
+    }
+    .pipeline-strip span { font-family: var(--mono); font-size: 0.75rem; color: var(--ink-soft); }
+    .pipeline-strip small { color: var(--ink-soft); }
+    @media (max-width: 900px) {
+      .pipeline-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+
+  <script>
+    const story = document.querySelector("[data-story]");
+    if (story) {
+      const steps = [...story.querySelectorAll<HTMLElement>("[data-story-step]")];
+      const visuals = [...story.querySelectorAll<HTMLElement>("[data-story-visual]")];
+      const activate = (id: string) => {
+        steps.forEach((step) => step.classList.toggle("is-active", step.dataset.storyStep === id));
+        visuals.forEach((visual) => visual.classList.toggle("is-active", visual.dataset.storyVisual === id));
+      };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          const id = (visible?.target as HTMLElement | undefined)?.dataset.storyStep;
+          if (id) activate(id);
+        },
+        { rootMargin: "-30% 0px -45%", threshold: [0.15, 0.4, 0.7] },
+      );
+      steps.forEach((step) => {
+        observer.observe(step);
+        step.addEventListener("focus", () => activate(step.dataset.storyStep || ""));
+      });
+    }
+  </script>
+</BaseLayout>

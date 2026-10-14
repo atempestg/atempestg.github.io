@@ -1,0 +1,248 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CaptureFrame from "../../components/CaptureFrame.astro";
+
+const overviewImage = `${import.meta.env.BASE_URL}images/projects/file-browser/file-browser-01-overview.png`;
+const previewImage = `${import.meta.env.BASE_URL}images/projects/file-browser/file-browser-02-preview.png`;
+const copyImage = `${import.meta.env.BASE_URL}images/projects/file-browser/file-browser-03-copy.png`;
+const remoteImage = `${import.meta.env.BASE_URL}images/projects/file-browser/file-browser-04-remote.png`;
+
+const storySteps = [
+  {
+    id: "overview",
+    index: "01",
+    title: "두 폴더를 한 창에 고정",
+    body: "왼쪽과 오른쪽 패널은 각자의 탭, 경로와 정렬 상태를 유지합니다. 출발지와 도착지를 동시에 보면서 파일을 비교하고, 창을 오가거나 목적지를 다시 찾는 일을 줄였습니다.",
+    slot: "FB–01",
+    filename: "file-browser-01-overview.png",
+    frameTitle: "File Browser",
+    state: "Dual-pane overview",
+    src: overviewImage,
+    alt: "Source와 Destination 폴더를 좌우에 나란히 띄우고 하단에 파일 작업 단축 명령을 표시한 macOS File Browser 화면",
+  },
+  {
+    id: "preview",
+    index: "02",
+    title: "파일을 떠나지 않고 내용 확인",
+    body: "Quick Look뿐 아니라 앱 하단 또는 전체 작업영역에 미리보기를 열 수 있습니다. Markdown은 표와 Mermaid를 렌더링하고, 필요하면 편집 모드로 전환해 같은 자리에서 저장합니다.",
+    slot: "FB–02",
+    filename: "file-browser-02-preview.png",
+    frameTitle: "Embedded preview",
+    state: "Markdown render",
+    src: previewImage,
+    alt: "File Browser 작업영역 전체에 README Markdown 문서를 렌더링한 내장 미리보기 화면",
+  },
+  {
+    id: "operations",
+    index: "03",
+    title: "선택한 항목을 반대편으로",
+    body: "현재 활성 패널에서 선택한 파일은 반대편 패널을 대상으로 복사·이동됩니다. 화면 아래의 고정 명령 바와 사용자 지정 단축키가 같은 동작을 호출해 반복 작업의 방향을 예측할 수 있습니다.",
+    slot: "FB–03",
+    filename: "file-browser-03-copy.png",
+    frameTitle: "File operation",
+    state: "Copy completed",
+    src: copyImage,
+    alt: "왼쪽 Source 패널에서 선택한 README 파일이 오른쪽 Destination 패널로 복사된 File Browser 화면",
+  },
+  {
+    id: "remote",
+    index: "04",
+    title: "로컬과 원격을 같은 패널 모델로",
+    body: "한쪽 패널을 고정 원격 연결 탭으로 전환해 파일 서버, 모바일 전송과 WebDAV를 다룹니다. 로컬 파일을 보던 좌우 구조를 유지하므로 별도의 전송 도구로 맥락을 옮길 필요가 없습니다.",
+    slot: "FB–04",
+    filename: "file-browser-04-remote.png",
+    frameTitle: "Remote connections",
+    state: "WebDAV workspace",
+    src: remoteImage,
+    alt: "왼쪽 로컬 파일 패널과 오른쪽 WebDAV 원격 연결 패널을 함께 표시한 File Browser 화면",
+  },
+];
+
+const decisions = [
+  {
+    index: "01",
+    title: "활성 패널에서 반대편 패널로",
+    problem: "복사와 이동 때마다 대상 폴더를 다시 고르면 반복 작업의 흐름이 끊깁니다.",
+    choice: "현재 활성 패널을 출발지, 반대편 패널을 도착지로 해석하는 일관된 명령 규칙을 적용했습니다.",
+    result: "파일을 선택한 뒤 한 번의 명령으로 방향이 명확한 작업을 수행할 수 있습니다.",
+  },
+  {
+    index: "02",
+    title: "명령은 하나, 진입점은 여러 개",
+    problem: "메뉴와 버튼, 단축키가 서로 다른 로직을 가지면 동작과 활성 조건이 쉽게 어긋납니다.",
+    choice: "파일 작업 명령을 공통 계층으로 모으고 메뉴, 하단 바와 사용자 지정 단축키가 이를 함께 사용하게 했습니다.",
+    result: "어떤 방식으로 실행해도 같은 검증과 피드백을 거치는 일관된 도구가 됐습니다.",
+  },
+  {
+    index: "03",
+    title: "미리보기를 별도 창이 아닌 작업영역에",
+    problem: "여러 파일의 내용을 비교할 때 별도 앱과 창이 늘어나면 현재 폴더와 선택 상태를 잃기 쉽습니다.",
+    choice: "Quick Look과 함께 하단·전체 화면 내장 미리보기를 제공하고 Markdown 편집까지 같은 문맥에 두었습니다.",
+    result: "탐색, 확인과 간단한 수정을 한 창 안에서 이어갈 수 있습니다.",
+  },
+  {
+    index: "04",
+    title: "삭제와 이동은 되돌릴 수 있게",
+    problem: "파일 관리 도구의 빠른 조작은 실수했을 때 손실 위험도 함께 키웁니다.",
+    choice: "삭제는 휴지통을 기본으로 하고, 이름 충돌을 먼저 확인하며, 볼륨 간 이동은 복사를 검증한 뒤 원본을 제거하도록 설계했습니다.",
+    result: "속도를 높이면서도 파일 손상을 막는 안전한 기본값을 유지합니다.",
+  },
+];
+---
+
+<BaseLayout
+  title="File Browser — Product & Systems Portfolio"
+  description="두 폴더를 한 창에서 비교하고 키보드로 복사·이동하는 macOS용 Finder 대체 파일 탐색기"
+  currentProject="file-browser"
+>
+  <article class="project-page">
+    <header class="project-hero page-pad">
+      <div class="project-hero__top reveal">
+        <p class="eyebrow">06 / Native macOS file manager</p>
+        <span class="status-chip"><i></i> Implemented · Live captures</span>
+      </div>
+      <h1 class="reveal reveal--delay-1">File<br /><em>Browser</em></h1>
+      <div class="project-hero__intro reveal reveal--delay-2">
+        <p class="project-lede">두 폴더를 한 창에 열고, 선택한 파일을 키보드 한 번으로 반대편에 복사·이동하는 macOS용 Finder 대체 파일 탐색기.</p>
+        <dl class="project-facts">
+          <div><dt>Role</dt><dd>Product design<br />Native macOS engineering</dd></div>
+          <div><dt>Stack</dt><dd>Swift · AppKit<br />Quick Look · SwiftTerm</dd></div>
+          <div><dt>State</dt><dd>Implemented<br />macOS 14+</dd></div>
+        </dl>
+      </div>
+      <div class="hero-capture reveal reveal--delay-3">
+        <CaptureFrame
+          slot="FB–01"
+          filename="file-browser-01-overview.png"
+          title="File Browser"
+          state="Native macOS · Dual pane"
+          src={overviewImage}
+          alt="Source와 Destination 폴더를 좌우에 나란히 띄우고 하단에 파일 작업 단축 명령을 표시한 macOS File Browser 화면"
+          caption="출발지와 도착지를 동시에 보고, 활성 패널에서 반대편 패널로 파일 작업을 실행합니다."
+        />
+      </div>
+    </header>
+
+    <section class="context-section page-pad section-rule">
+      <div class="section-index">
+        <p class="eyebrow">01 / Context</p>
+        <span>From window juggling<br />to a fixed workflow</span>
+      </div>
+      <div class="context-copy">
+        <h2>Finder는 범용 탐색기지만<br />반복적인 파일 작업에는 창이 많아졌습니다.</h2>
+        <p>두 폴더를 비교하며 파일을 옮기는 작업에서는 Finder 창을 나란히 배치하고, 매번 현재 위치와 목적지를 다시 확인해야 했습니다. 파일 내용을 확인할 때는 또 다른 앱이나 미리보기 창이 작업 흐름에 끼어들었습니다.</p>
+        <p>File Browser는 이 반복을 좌우 패널 구조로 고정합니다. 양쪽 경로를 계속 보이게 두고, 현재 선택을 반대편으로 보내는 명령 규칙과 내장 미리보기를 결합해 Finder를 대체할 수 있는 키보드 중심 작업 공간을 만들었습니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section section-rule" aria-labelledby="walkthrough-heading">
+      <div class="story-heading page-pad">
+        <p class="eyebrow">02 / System walkthrough</p>
+        <h2 id="walkthrough-heading">See both sides.<br />Move with intent.</h2>
+      </div>
+
+      <div class="story-layout page-pad" data-story>
+        <div class="story-steps">
+          {storySteps.map((step, index) => (
+            <section
+              class:list={["story-step", { "is-active": index === 0 }]}
+              data-story-step={step.id}
+              tabindex="0"
+            >
+              <span>{step.index}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <small>Scroll to explore</small>
+            </section>
+          ))}
+        </div>
+
+        <div class="story-stage" aria-live="polite">
+          {storySteps.map((step, index) => (
+            <div class:list={["story-visual", { "is-active": index === 0 }]} data-story-visual={step.id}>
+              <CaptureFrame
+                slot={step.slot}
+                filename={step.filename}
+                title={step.frameTitle}
+                state={step.state}
+                src={step.src}
+                alt={step.alt}
+                tone={index === 1 ? "blue" : index === 3 ? "amber" : "graphite"}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="decisions-section page-pad section-rule" aria-labelledby="decisions-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">03 / Key decisions</p>
+          <h2 id="decisions-heading">Fast by interaction,<br />safe by default</h2>
+        </div>
+        <p>파일 작업의 속도를 높이되 방향, 상태와 복구 가능성을 잃지 않기 위해 내린 네 가지 판단입니다.</p>
+      </div>
+      <ol class="decision-list">
+        {decisions.map((decision) => (
+          <li>
+            <header><span>{decision.index}</span><h3>{decision.title}</h3></header>
+            <div><small>Problem</small><p>{decision.problem}</p></div>
+            <div><small>Choice</small><p>{decision.choice}</p></div>
+            <div><small>Result</small><p>{decision.result}</p></div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="evidence-section page-pad section-rule">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">04 / Evidence</p>
+          <h2>What is implemented</h2>
+        </div>
+        <p>기획 문구가 아니라 현재 네이티브 빌드에서 직접 확인한 기능 범위입니다.</p>
+      </div>
+      <dl class="evidence-grid">
+        <div><dt>02</dt><dd>Independent file panels</dd><small>Tabs · paths · sort · selection</small></div>
+        <div><dt>06</dt><dd>Persistent action commands</dd><small>Archive · rename · path · copy · move · folder</small></div>
+        <div><dt>03</dt><dd>Content viewing modes</dd><small>Quick Look · embedded preview · editor</small></div>
+        <div><dt>03</dt><dd>Remote connection modes</dd><small>File server · mobile transfer · WebDAV</small></div>
+      </dl>
+      <p class="evidence-note">촬영 이미지는 최신 로컬 빌드에 합성 데모 폴더를 연결해 직접 캡처했으며, 개인 파일과 연결 자격 증명은 포함하지 않았습니다.</p>
+    </section>
+
+    <a class="next-project page-pad section-rule" href={import.meta.env.BASE_URL}>
+      <span class="eyebrow">Back to index</span>
+      <strong>Explore selected systems</strong>
+      <i aria-hidden="true">↗</i>
+    </a>
+  </article>
+
+  <script>
+    const story = document.querySelector("[data-story]");
+    if (story) {
+      const steps = [...story.querySelectorAll<HTMLElement>("[data-story-step]")];
+      const visuals = [...story.querySelectorAll<HTMLElement>("[data-story-visual]")];
+      const activate = (id: string) => {
+        steps.forEach((step) => step.classList.toggle("is-active", step.dataset.storyStep === id));
+        visuals.forEach((visual) => visual.classList.toggle("is-active", visual.dataset.storyVisual === id));
+      };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          const id = (visible?.target as HTMLElement | undefined)?.dataset.storyStep;
+          if (id) activate(id);
+        },
+        { rootMargin: "-30% 0px -45%", threshold: [0.15, 0.4, 0.7] },
+      );
+      steps.forEach((step) => {
+        observer.observe(step);
+        step.addEventListener("focus", () => activate(step.dataset.storyStep || ""));
+      });
+    }
+  </script>
+</BaseLayout>

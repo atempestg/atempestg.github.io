@@ -1,0 +1,298 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CaptureFrame from "../../components/CaptureFrame.astro";
+import ArchitectureDiagram from "../../components/ArchitectureDiagram.astro";
+
+const overviewImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-01-overview.png`;
+const editLayoutImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-02-edit-layout.png`;
+const widgetPaletteImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-03-widget-palette.png`;
+const smartBookmarkImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-04-smart-bookmark.png`;
+const liteGrafanaImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-05-lite-grafana.png`;
+const providerSettingsImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-06-provider-settings.png`;
+const knowledgeImage = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-07-knowledge.png`;
+
+const storySteps = [
+  {
+    id: "overview",
+    index: "01",
+    title: "자주 쓰는 링크를 한 화면으로",
+    body: "Personal Hub의 중심은 바로가기입니다. 링크를 용도별 카테고리로 묶어 한 화면에서 훑고, 검색과 자주 쓰는 항목으로 원하는 곳에 빠르게 접근합니다.",
+    slot: "PH–01",
+    filename: "personal-hub-01-overview.png",
+    frameTitle: "Dashboard overview",
+    state: "View mode",
+    src: overviewImage,
+    alt: "카테고리별 바로가기 링크를 중심으로 날씨와 서버 상태 등 추가 위젯을 배치한 Personal Hub 화면",
+  },
+  {
+    id: "layout",
+    index: "02",
+    title: "YAML 대신 직접 조립하는 레이아웃",
+    body: "편집 모드에서 타일을 이동하고 크기를 바꾸면 브레이크포인트별 좌표가 저장됩니다. 설정 파일과 재배포 없이 화면에서 구성이 끝납니다.",
+    slot: "PH–02",
+    filename: "personal-hub-02-edit-layout.png",
+    frameTitle: "Layout editor",
+    state: "Edit mode",
+    src: editLayoutImage,
+    alt: "편집 모드에서 바로가기 카테고리와 정보 위젯의 이동·크기 조절 컨트롤이 표시된 Personal Hub 화면",
+  },
+  {
+    id: "palette",
+    index: "03",
+    title: "필요한 기능을 화면에서 바로 추가",
+    body: "위젯 팔레트에서 바로가기 카테고리, 문서, 날씨, 금융, 메시지와 인프라 위젯을 고릅니다. 별도 설정 파일을 수정하지 않고 화면 안에서 구성을 확장합니다.",
+    slot: "PH–03",
+    filename: "personal-hub-03-widget-palette.png",
+    frameTitle: "Widget palette",
+    state: "Choose a widget",
+    src: widgetPaletteImage,
+    alt: "사이드 메뉴의 위젯 추가 항목과 북마크·문서·날씨·금융·인프라 위젯 선택 창을 화살표로 설명한 화면",
+  },
+  {
+    id: "bookmark",
+    index: "04",
+    title: "URL 한 줄을 스마트 북마크로",
+    body: "주소를 붙여넣으면 서버가 제목, favicon과 메타데이터를 읽습니다. 크롤링이 실패해도 사용자가 이름을 고쳐 저장할 수 있어 편의 기능이 작업을 막지 않습니다.",
+    slot: "PH–04",
+    filename: "personal-hub-04-smart-bookmark.png",
+    frameTitle: "Smart bookmark",
+    state: "Metadata preview",
+    src: smartBookmarkImage,
+    alt: "바로가기 추가 메뉴에서 Google URL의 제목과 아이콘을 가져와 대상 카테고리를 선택하는 과정을 화살표로 설명한 화면",
+  },
+  {
+    id: "infra",
+    index: "05",
+    title: "필요한 정보는 위젯으로 덧붙이기",
+    body: "바로가기 사용을 방해하지 않는 범위에서 날씨, 주가, GitHub Actions, Discord와 서버 상태 위젯을 추가할 수 있습니다. 인프라 데이터는 가벼운 차트로 핵심 신호만 보여줍니다.",
+    slot: "PH–05",
+    filename: "personal-hub-05-lite-grafana.png",
+    frameTitle: "Server status widgets",
+    state: "Infrastructure · workflows",
+    src: liteGrafanaImage,
+    alt: "Proxmox와 OCI 인스턴스의 CPU·메모리·디스크 상태 및 GitHub Actions 실행 결과를 카드로 모아 보여주는 Personal Hub 위젯 화면",
+  },
+  {
+    id: "providers",
+    index: "06",
+    title: "실제 서버 연결은 자격 증명 단위로",
+    body: "연동 설정에서 Proxmox, Synology, AWS RDS와 OCI 연결을 등록하고 상태를 확인합니다. 자격 증명은 브라우저에 노출하지 않고 서버 경계 안에서 관리합니다.",
+    slot: "PH–06",
+    filename: "personal-hub-06-provider-settings.png",
+    frameTitle: "Provider settings",
+    state: "Provider connections",
+    src: providerSettingsImage,
+    alt: "사이드 메뉴의 연동 설정에서 Proxmox와 OCI 자격 증명 연결 상태를 확인하는 과정을 화살표로 설명한 Personal Hub 화면",
+  },
+  {
+    id: "knowledge",
+    index: "07",
+    title: "문서와 코드 스니펫도 같은 허브에서",
+    body: "계층형 문서 링크는 대시보드 위젯으로 관리하고, 코드 스니펫은 폴더·검색·비교에 맞는 별도 작업 화면으로 연결했습니다. 링크 허브에서 지식 도구로 자연스럽게 이어집니다.",
+    slot: "PH–07",
+    filename: "personal-hub-07-knowledge.png",
+    frameTitle: "Documents & snippets",
+    state: "Knowledge workspace",
+    src: knowledgeImage,
+    alt: "폴더별 코드 스니펫 목록과 문서 목차, 검색, 다이어그램이 포함된 본문을 함께 보여주는 Personal Hub 코드 스니펫 작업 공간",
+  },
+];
+
+const decisions = [
+  {
+    index: "01",
+    title: "타일이 아니라 카테고리를 북마크의 기본 단위로",
+    problem: "링크 하나마다 타일을 만들면 화면 밀도가 빠르게 무너졌습니다.",
+    choice: "카테고리 타일 안에 링크 행을 쌓고, 행 단위 정렬과 이동을 지원했습니다.",
+    result: "같은 면적에서 더 많은 접속 경로를 읽고 관리할 수 있습니다.",
+  },
+  {
+    index: "02",
+    title: "바로가기는 중심에, 나머지는 선택적으로",
+    problem: "모든 정보를 기본 화면에 넣으면 시작 페이지가 또 하나의 복잡한 관리 도구가 됩니다.",
+    choice: "바로가기 카테고리를 기본으로 두고 날씨, 주가, 서버 상태 등의 위젯은 필요할 때만 추가하게 했습니다.",
+    result: "빠른 링크 접근이라는 제품의 본질을 유지하면서 개인별로 필요한 정보만 확장할 수 있습니다.",
+  },
+  {
+    index: "03",
+    title: "정보의 형태에 맞는 관리 화면",
+    problem: "문서 트리와 코드를 단순 링크 목록에 억지로 넣으면 탐색과 편집 경험이 모두 나빠집니다.",
+    choice: "문서는 계층형 위젯으로, 코드 스니펫은 폴더·검색·비교를 갖춘 별도 작업 공간으로 구성했습니다.",
+    result: "하나의 허브에서 출발하면서도 각 콘텐츠에 필요한 깊이를 잃지 않습니다.",
+  },
+  {
+    index: "04",
+    title: "실데이터와 샘플 데이터를 UI에서 구분",
+    problem: "자격증명이 없는 첫 화면은 비어 보이거나 가짜 운영 수치로 오해될 수 있습니다.",
+    choice: "결정론적 mock 어댑터를 쓰되 모든 샘플 위젯에 상태 배지를 붙였습니다.",
+    result: "Zero-config 첫 경험과 데이터 정직성을 동시에 유지했습니다.",
+  },
+];
+---
+
+<BaseLayout
+  title="Personal Hub — Product & Systems Portfolio"
+  description="자주 쓰는 바로가기 링크를 중심으로 추가 위젯, 문서 관리와 코드 스니펫을 결합한 개인용 시작 페이지"
+  currentProject="personal-hub"
+>
+  <article class="project-page">
+    <header class="project-hero page-pad">
+      <div class="project-hero__top reveal">
+        <p class="eyebrow">04 / Link-first start page</p>
+        <span class="status-chip"><i></i> Implemented · Sanitized</span>
+      </div>
+      <h1 class="reveal reveal--delay-1">Personal<br /><em>Hub</em></h1>
+      <div class="project-hero__intro reveal reveal--delay-2">
+        <p class="project-lede">자주 쓰는 바로가기 링크를 중심으로, 필요한 정보와 도구를 위젯처럼 덧붙이는 개인용 시작 페이지.</p>
+        <dl class="project-facts">
+          <div><dt>Role</dt><dd>Product design<br />Full-stack engineering</dd></div>
+          <div><dt>Stack</dt><dd>Next.js · TypeScript<br />Prisma · PostgreSQL</dd></div>
+          <div><dt>State</dt><dd>Implemented<br />Synthetic showcase</dd></div>
+        </dl>
+      </div>
+      <div class="hero-capture reveal reveal--delay-3">
+        <CaptureFrame
+          slot="PH–01"
+          filename="personal-hub-01-overview.png"
+          title="Personal Hub"
+          state="Dashboard overview"
+          src={overviewImage}
+          alt="카테고리별 바로가기 링크를 중심으로 날씨와 서버 상태 등 추가 위젯을 배치한 Personal Hub 화면"
+          caption="카테고리별 바로가기가 화면의 중심을 이루고, 날씨와 서버 상태 같은 정보 위젯이 필요한 만큼 더해집니다."
+        />
+      </div>
+    </header>
+
+    <section class="context-section page-pad section-rule">
+      <div class="section-index">
+        <p class="eyebrow">01 / Context</p>
+        <span>From fragmented tools<br />to one control surface</span>
+      </div>
+      <div class="context-copy">
+        <h2>자주 쓰는 링크는 많았지만<br />빠르게 찾기는 어려웠습니다.</h2>
+        <p>서비스와 관리 화면이 늘수록 브라우저 북마크는 길어지고, 주소를 기억하거나 여러 폴더를 뒤지는 일이 반복됐습니다. 문서와 자주 쓰는 코드도 서로 다른 앱에 흩어져 있었습니다.</p>
+        <p>Personal Hub는 이 접속 경로를 카테고리별 바로가기 화면으로 정리하는 데서 출발합니다. 서버 상태, 날씨, 주가 같은 정보는 부가 위젯으로 더하고, 문서 관리와 코드 스니펫은 같은 허브 안에서 이어지도록 확장했습니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section section-rule" aria-labelledby="walkthrough-heading">
+      <div class="story-heading page-pad">
+        <p class="eyebrow">02 / System walkthrough</p>
+        <h2 id="walkthrough-heading">Links first,<br />then everything useful.</h2>
+      </div>
+
+      <div class="story-layout page-pad" data-story>
+        <div class="story-steps">
+          {storySteps.map((step, index) => (
+            <section
+              class:list={["story-step", { "is-active": index === 0 }]}
+              data-story-step={step.id}
+              tabindex="0"
+            >
+              <span>{step.index}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <small>Scroll to explore</small>
+            </section>
+          ))}
+        </div>
+
+        <div class="story-stage" aria-live="polite">
+          {storySteps.map((step, index) => (
+            <div class:list={["story-visual", { "is-active": index === 0 }]} data-story-visual={step.id}>
+              <CaptureFrame
+                slot={step.slot}
+                filename={step.filename}
+                title={step.frameTitle}
+                state={step.state}
+                src={step.src}
+                alt={step.alt}
+                tone={index === 2 ? "amber" : index === 3 ? "blue" : "sage"}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="decisions-section page-pad section-rule" aria-labelledby="decisions-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">03 / Key decisions</p>
+          <h2 id="decisions-heading">Design choices with<br />operational consequences</h2>
+        </div>
+        <p>바로가기를 중심으로 유지하면서 기능을 확장하기 위해 내린 네 가지 판단입니다.</p>
+      </div>
+      <ol class="decision-list">
+        {decisions.map((decision) => (
+          <li>
+            <header><span>{decision.index}</span><h3>{decision.title}</h3></header>
+            <div><small>Problem</small><p>{decision.problem}</p></div>
+            <div><small>Choice</small><p>{decision.choice}</p></div>
+            <div><small>Result</small><p>{decision.result}</p></div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="architecture-section page-pad section-rule" aria-labelledby="architecture-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">04 / Architecture</p>
+          <h2 id="architecture-heading">A small app with<br />a deliberate trust boundary</h2>
+        </div>
+        <p>바로가기 대시보드와 지식 작업 공간을 한 애플리케이션에 두고, 메타데이터 수집과 외부 연동은 서버 경계 안으로 모았습니다.</p>
+      </div>
+      <ArchitectureDiagram />
+    </section>
+
+    <section class="evidence-section page-pad section-rule">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">05 / Evidence</p>
+          <h2>What is implemented</h2>
+        </div>
+      </div>
+      <dl class="evidence-grid">
+        <div><dt>12</dt><dd>Composable widget types</dd><small>Links · information · documents · actions</small></div>
+        <div><dt>03</dt><dd>Connected content layers</dd><small>Shortcuts · documents · code snippets</small></div>
+        <div><dt>05</dt><dd>Responsive grid breakpoints</dd><small>Persistent geometry per viewport</small></div>
+        <div><dt>04</dt><dd>Optional infrastructure adapters</dd><small>Proxmox · Synology · AWS RDS · OCI</small></div>
+      </dl>
+      <p class="evidence-note">핵심 경험은 링크 탐색이며, 다른 도구와 정보는 사용자가 필요한 만큼 선택해 추가합니다.</p>
+    </section>
+
+    <a class="next-project page-pad section-rule" href={import.meta.env.BASE_URL}>
+      <span class="eyebrow">Back to index</span>
+      <strong>Explore selected systems</strong>
+      <i aria-hidden="true">↗</i>
+    </a>
+  </article>
+
+  <script>
+    const story = document.querySelector("[data-story]");
+    if (story) {
+      const steps = [...story.querySelectorAll<HTMLElement>("[data-story-step]")];
+      const visuals = [...story.querySelectorAll<HTMLElement>("[data-story-visual]")];
+      const activate = (id: string) => {
+        steps.forEach((step) => step.classList.toggle("is-active", step.dataset.storyStep === id));
+        visuals.forEach((visual) => visual.classList.toggle("is-active", visual.dataset.storyVisual === id));
+      };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          const id = (visible?.target as HTMLElement | undefined)?.dataset.storyStep;
+          if (id) activate(id);
+        },
+        { rootMargin: "-30% 0px -45%", threshold: [0.15, 0.4, 0.7] },
+      );
+      steps.forEach((step) => {
+        observer.observe(step);
+        step.addEventListener("focus", () => activate(step.dataset.storyStep || ""));
+      });
+    }
+  </script>
+</BaseLayout>

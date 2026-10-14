@@ -1,0 +1,55 @@
+<figure class="architecture-figure">
+  <div class="architecture-figure__heading">
+    <span>System boundary</span>
+    <span>Links → tools → optional signals</span>
+  </div>
+  <svg viewBox="0 0 1040 460" role="img" aria-labelledby="architecture-title architecture-desc">
+    <title id="architecture-title">Personal Hub 시스템 구조</title>
+    <desc id="architecture-desc">바로가기 대시보드와 코드 스니펫 화면이 Next.js 애플리케이션, 저장소와 선택적 외부 연동으로 이어지는 구조</desc>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+      </marker>
+      <linearGradient id="panel-fill" x1="0" x2="1">
+        <stop offset="0" stop-color="var(--surface-strong)" />
+        <stop offset="1" stop-color="var(--surface)" />
+      </linearGradient>
+    </defs>
+    <g class="architecture-lines" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)">
+      <path d="M210 230 H340" />
+      <path d="M590 230 H720" />
+      <path d="M465 310 V370 H720" />
+    </g>
+    <g class="architecture-node architecture-node--client">
+      <rect x="30" y="150" width="180" height="160" rx="4" />
+      <text x="55" y="190" class="node-kicker">CLIENT</text>
+      <text x="55" y="230" class="node-title">Browser</text>
+      <text x="55" y="260" class="node-copy">Link dashboard</text>
+      <text x="55" y="282" class="node-copy">Snippet workspace</text>
+    </g>
+    <g class="architecture-node architecture-node--core">
+      <rect x="340" y="90" width="250" height="220" rx="4" />
+      <text x="370" y="130" class="node-kicker">APPLICATION</text>
+      <text x="370" y="172" class="node-title">Next.js</text>
+      <text x="370" y="204" class="node-copy">Dashboard · smart links</text>
+      <line x1="370" y1="226" x2="560" y2="226" />
+      <text x="370" y="258" class="node-copy">Documents · snippets</text>
+      <text x="370" y="282" class="node-copy">API proxy · adapters</text>
+    </g>
+    <g class="architecture-node">
+      <rect x="720" y="40" width="290" height="210" rx="4" />
+      <text x="750" y="80" class="node-kicker">OPTIONAL SOURCES</text>
+      <text x="750" y="120" class="node-title">Content & signals</text>
+      <text x="750" y="154" class="node-copy">Web metadata · weather · stocks</text>
+      <text x="750" y="178" class="node-copy">Infrastructure providers</text>
+      <text x="750" y="202" class="node-copy">Microsoft · Obsidian</text>
+    </g>
+    <g class="architecture-node">
+      <rect x="720" y="310" width="290" height="120" rx="4" />
+      <text x="750" y="350" class="node-kicker">STATE</text>
+      <text x="750" y="388" class="node-title">PostgreSQL</text>
+      <text x="750" y="414" class="node-copy">Layouts · links · documents · snippets</text>
+    </g>
+  </svg>
+  <figcaption>바로가기와 사용자 구성이 중심 데이터이며, 웹 메타데이터와 생활·인프라 정보는 필요할 때 서버를 통해 보강됩니다.</figcaption>
+</figure>

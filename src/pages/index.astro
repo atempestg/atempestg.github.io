@@ -1,0 +1,100 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CaptureFrame from "../components/CaptureFrame.astro";
+
+const capabilities = [
+  ["01", "Agentic systems", "LLM orchestration, MCP, RAG와 승인 가능한 자동화 흐름"],
+  ["02", "Product engineering", "요구사항과 UX에서 운영 가능한 애플리케이션까지"],
+  ["03", "Cloud & automation", "AWS, 컨테이너, CI/CD와 관측 가능한 운영 경계"],
+];
+const personalHubOverview = `${import.meta.env.BASE_URL}images/projects/personal-hub/personal-hub-01-overview.png`;
+---
+
+<BaseLayout
+  title="Product & Systems Portfolio"
+  description="필요한 도구를 직접 설계하고 실제로 사용하는 제품으로 구현한 작업 기록"
+  pageKind="home"
+>
+  <section class="home-hero page-pad">
+    <div class="home-hero__meta reveal">
+      <p class="eyebrow">Selected work · 2026</p>
+      <p class="availability"><span></span> Building practical systems</p>
+    </div>
+    <h1 class="reveal reveal--delay-1">
+      필요한 도구를<br />
+      <em>직접 설계하고</em><br />
+      실제로 쓰이는 제품으로 만듭니다.
+    </h1>
+    <div class="home-hero__bottom reveal reveal--delay-2">
+      <p>
+        프로젝트가 해결하려는 핵심 문제부터 부가 기능, 설계 판단과 실제 구현 범위까지
+        하나의 이야기로 보여주는 제품·시스템 케이스 스터디입니다.
+      </p>
+      <a class="text-link" href={`${import.meta.env.BASE_URL}projects/personal-hub/`}>
+        첫 번째 케이스 스터디 보기 <span aria-hidden="true">↘</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="featured page-pad section-rule" aria-labelledby="featured-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">01 / Featured work</p>
+        <h2 id="featured-heading">Selected case study</h2>
+      </div>
+      <p>실제 구현 화면과 제품의 핵심 설계 판단을 함께 정리했습니다.</p>
+    </div>
+
+    <a class="featured-project" href={`${import.meta.env.BASE_URL}projects/personal-hub/`}>
+      <div class="featured-project__copy">
+        <div class="project-number">04</div>
+        <p class="eyebrow">Link-first start page · Implemented</p>
+        <h3>Personal Hub</h3>
+        <p>자주 쓰는 바로가기 링크를 중심으로 서버 상태, 날씨, 주가, 문서와 코드 스니펫을 덧붙인 개인용 시작 페이지.</p>
+        <ul class="tag-list" aria-label="기술 스택">
+          <li>Next.js</li><li>TypeScript</li><li>PostgreSQL</li><li>Prisma</li>
+        </ul>
+        <span class="featured-project__cta">View case study <b aria-hidden="true">↗</b></span>
+      </div>
+      <CaptureFrame
+        slot="PH–01"
+        filename="personal-hub-01-overview.png"
+        title="Personal Hub"
+        state="Overview"
+        src={personalHubOverview}
+        alt="카테고리별 바로가기 링크를 중심으로 날씨와 서버 상태 등 추가 위젯을 배치한 Personal Hub 화면"
+        compact
+      />
+    </a>
+  </section>
+
+  <section class="capabilities page-pad section-rule" aria-labelledby="capability-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">02 / Capability map</p>
+        <h2 id="capability-heading">Across product and platform</h2>
+      </div>
+    </div>
+    <ol class="capability-list">
+      {capabilities.map(([index, title, description]) => (
+        <li>
+          <span>{index}</span>
+          <h3>{title}</h3>
+          <p>{description}</p>
+          <i aria-hidden="true">↗</i>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="about-block page-pad section-rule" id="about">
+    <p class="eyebrow">03 / Working principles</p>
+    <blockquote>“빠르게 만드는 것과 오래 운영할 수 있게 만드는 것 사이의 경계를 설계합니다.”</blockquote>
+    <div class="principles-grid">
+      <p><span>01</span> 안전한 기본값</p>
+      <p><span>02</span> 계약이 먼저인 경계</p>
+      <p><span>03</span> 교체 가능한 어댑터</p>
+      <p><span>04</span> 운영 가능한 자동화</p>
+    </div>
+  </section>
+</BaseLayout>

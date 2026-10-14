@@ -1,0 +1,56 @@
+---
+interface Props {
+  slot: string;
+  filename: string;
+  title: string;
+  state: string;
+  caption?: string;
+  src?: string;
+  alt?: string;
+  tone?: "sage" | "amber" | "blue" | "graphite";
+  compact?: boolean;
+}
+
+const {
+  slot,
+  filename,
+  title,
+  state,
+  caption,
+  src,
+  alt = "",
+  tone = "sage",
+  compact = false,
+} = Astro.props;
+---
+
+<figure class:list={["capture-frame", `capture-frame--${tone}`, { "capture-frame--compact": compact }]}>
+  <div class="capture-frame__bar">
+    <div class="capture-frame__dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <span>{title}</span>
+    <span class="capture-frame__state">{state}</span>
+  </div>
+  <div class="capture-frame__viewport">
+    {src ? (
+      <img src={src} alt={alt} width="1440" height="1000" loading="lazy" />
+    ) : (
+      <div class="capture-placeholder" role="img" aria-label={`${title} 화면 이미지가 들어갈 자리`}>
+        <div class="capture-placeholder__grid" aria-hidden="true">
+          <div class="mock-rail"></div>
+          <div class="mock-top"></div>
+          <div class="mock-card mock-card--wide"></div>
+          <div class="mock-card"></div>
+          <div class="mock-card"></div>
+          <div class="mock-lines"><i></i><i></i><i></i></div>
+        </div>
+        <div class="capture-placeholder__label">
+          <span>{slot}</span>
+          <strong>Screenshot pending</strong>
+          <small>1440 × 1000 PNG</small>
+          <code>{filename}</code>
+        </div>
+      </div>
+    )}
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

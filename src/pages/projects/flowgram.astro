@@ -1,0 +1,320 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CaptureFrame from "../../components/CaptureFrame.astro";
+
+const image = (name: string) => `${import.meta.env.BASE_URL}images/projects/flowgram/${name}`;
+
+const storySteps = [
+  {
+    id: "canvas",
+    index: "01",
+    title: "브라우저에서 그리는 다이어그램",
+    body: "도형 라이브러리에서 끌어다 놓고 연결점을 드래그해 선을 잇습니다. 정렬 가이드, 격자 맞춤, 그룹, 레이어와 100단계 실행 취소까지 편집기의 기본기를 SVG 위에 직접 구현했습니다.",
+    slot: "FG–01",
+    filename: "flowgram-01-canvas.png",
+    frameTitle: "Canvas",
+    state: "Sequence diagram",
+    alt: "사용자, 웹 앱, API 서버, 인증, 캐시, 데이터베이스, 이벤트 큐 사이의 호출 순서를 그린 시퀀스 다이어그램과 왼쪽 도형 라이브러리",
+  },
+  {
+    id: "templates",
+    index: "02",
+    title: "빈 캔버스 대신 구조에서 시작",
+    body: "흐름도, 아키텍처, 조직도, 고객 여정과 시퀀스·데이터 흐름·라이프사이클 템플릿을 제공합니다. 템플릿은 그림이 아니라 편집 가능한 도형과 연결선으로 들어옵니다.",
+    slot: "FG–02",
+    filename: "flowgram-02-templates.png",
+    frameTitle: "Templates",
+    state: "Template gallery",
+    alt: "승인 프로세스, 웹 서비스 아키텍처, 팀 조직도, 고객 여정 등 미리보기가 있는 Flowgram 템플릿 선택 창",
+  },
+  {
+    id: "ai",
+    index: "03",
+    title: "말로 요청하면 편집 가능한 그림으로",
+    body: "AI 도우미는 편집 도구를 직접 호출해 도형과 연결선을 만듭니다. 결과는 먼저 미리보기로 보여주고 사용자가 적용해야 문서가 바뀌며, 적용 후에도 실행 취소로 되돌릴 수 있습니다.",
+    slot: "FG–03",
+    filename: "flowgram-03-ai.png",
+    frameTitle: "AI assistant",
+    state: "Applied to new page",
+    alt: "AI 도우미 대화창의 요청과 미리보기, 그리고 캔버스에 생성된 휴가 신청 승인 흐름도",
+  },
+  {
+    id: "aws",
+    index: "04",
+    title: "AWS 공식 아이콘 736개",
+    body: "카테고리와 유형으로 아이콘을 찾아 클릭하거나 끌어서 배치합니다. 리전·VPC·서브넷 그룹과 함께 클라우드 아키텍처를 그리고, 아이콘은 문서 안에 자체 포함해 저장합니다.",
+    slot: "FG–04",
+    filename: "flowgram-04-aws.png",
+    frameTitle: "AWS shapes",
+    state: "Icon library",
+    alt: "AWS 공식 아이콘 검색 패널과 소스·수집·변환·저장·소비 단계로 나뉜 데이터 파이프라인 다이어그램",
+  },
+  {
+    id: "export",
+    index: "05",
+    title: "결과는 문서가 있는 곳으로",
+    body: "다시 편집할 수 있는 Flow 파일, 선명한 SVG, 고해상도 PNG로 내보내고, 현재 페이지를 Confluence의 기존 페이지나 새 페이지에 바로 올립니다.",
+    slot: "FG–05",
+    filename: "flowgram-05-export.png",
+    frameTitle: "Export",
+    state: "Flow · SVG · PNG · Confluence",
+    alt: "Flow 파일, SVG 벡터 이미지, PNG 이미지, Confluence에 올리기 네 가지 선택지가 있는 다이어그램 내보내기 창",
+  },
+].map((step) => ({ ...step, src: image(step.filename) }));
+
+const decisions = [
+  {
+    index: "01",
+    title: "AI가 그림을 만들지 않고 편집을 제안",
+    problem: "모델이 이미지나 코드를 통째로 만들면 결과를 고치기 어렵고, 잘못된 편집이 문서를 바로 망가뜨릴 수 있습니다.",
+    choice: "모델에는 도형·연결선 편집 도구만 주고, 서버는 작업용 사본에 적용해 문서 규칙 위반 시 전체를 되돌린 뒤 이유를 다시 모델에 알립니다.",
+    result: "AI 결과도 사람이 만든 것과 같은 편집 가능한 도형이며, 사용자가 적용하기 전까지 원본은 바뀌지 않습니다.",
+  },
+  {
+    index: "02",
+    title: "배치 품질을 모델에게 되돌려주기",
+    problem: "LLM이 정한 좌표는 도형 겹침, 컨테이너 경계 걸침, 선이 도형을 가로지르는 문제가 자주 생깁니다.",
+    choice: "편집 결과마다 겹침·경계·선 경로·레이블 충돌을 점검한 목록을 붙여 돌려주고, 모델이 남은 문제를 스스로 고치게 했습니다.",
+    result: "규칙 기반 변환기 없이도 사람이 바로 손볼 수 있는 수준의 레이아웃이 나옵니다.",
+  },
+  {
+    index: "03",
+    title: "외부 에이전트는 MCP와 요청 큐로",
+    problem: "사용자가 쓰는 AI 에이전트에서도 다이어그램을 만들고 싶지만, 앱이 임의 에이전트를 실행하게 할 수는 없었습니다.",
+    choice: "stdio MCP 서버와 지속 저장되는 요청 큐를 두고, 에이전트가 제출한 Mermaid·문서를 사용자 본인 권한으로만 반영하게 했습니다.",
+    result: "앱은 모델을 직접 부르지 않고도 외부 에이전트의 결과를 검토 후 편집 가능한 문서로 받습니다.",
+  },
+  {
+    index: "04",
+    title: "자동 저장은 낙관적 잠금으로",
+    problem: "실시간 공동 편집 없이 여러 창과 사용자가 같은 문서를 저장하면 나중 저장이 앞선 변경을 덮어씁니다.",
+    choice: "문서마다 revision을 두고 저장 시 비교해, 먼저 저장된 변경이 있으면 덮어쓰지 않고 새로고침을 안내합니다.",
+    result: "편집 충돌이 조용한 데이터 손실이 아니라 눈에 보이는 상태가 됩니다.",
+  },
+];
+---
+
+<BaseLayout
+  title="Flowgram — Product & Systems Portfolio"
+  description="도형과 연결선을 자유롭게 편집하고 AI·MCP 에이전트로 다이어그램을 만드는 웹 다이어그램 워크스페이스"
+  currentProject="flowgram"
+>
+  <article class="project-page">
+    <header class="project-hero page-pad">
+      <div class="project-hero__top reveal">
+        <p class="eyebrow">07 / Diagram workspace</p>
+        <span class="status-chip"><i></i> In production · Sanitized</span>
+      </div>
+      <h1 class="reveal reveal--delay-1">Flow<br /><em>gram</em></h1>
+      <div class="project-hero__intro reveal reveal--delay-2">
+        <p class="project-lede">도형과 연결선을 자유롭게 편집하고, AI와 MCP 에이전트가 만든 결과도 편집 가능한 문서로 받는 웹 다이어그램 워크스페이스.</p>
+        <dl class="project-facts">
+          <div><dt>Role</dt><dd>Product design<br />Full-stack engineering</dd></div>
+          <div><dt>Stack</dt><dd>React · TypeScript · SVG<br />Node · MySQL · MCP</dd></div>
+          <div><dt>State</dt><dd>In production<br />Synthetic showcase</dd></div>
+        </dl>
+      </div>
+      <div class="hero-capture reveal reveal--delay-3">
+        <CaptureFrame
+          slot="FG–01"
+          filename="flowgram-01-canvas.png"
+          title="Flowgram"
+          state="Sequence diagram"
+          src={image("flowgram-01-canvas.png")}
+          alt="사용자, 웹 앱, API 서버, 인증, 캐시, 데이터베이스, 이벤트 큐 사이의 호출 순서를 그린 시퀀스 다이어그램과 왼쪽 도형 라이브러리"
+          caption="모든 화면은 로컬 환경에서 기본 템플릿과 가상 예제로 촬영했습니다. 사내 문서와 시스템 구성은 포함하지 않습니다."
+        />
+      </div>
+    </header>
+
+    <section class="context-section page-pad section-rule">
+      <div class="section-index">
+        <p class="eyebrow">01 / Context</p>
+        <span>From licensed tool<br />to in-house workspace</span>
+      </div>
+      <div class="context-copy">
+        <h2>다이어그램은 매일 필요했지만<br />도구는 밖에 있었습니다.</h2>
+        <p>아키텍처와 업무 흐름을 그릴 때마다 외부 SaaS 라이선스와 계정 관리가 필요했고, 그린 결과는 사내 위키와 AI 도구에서 다시 쓰기 어려웠습니다.</p>
+        <p>Flowgram은 사내 SSO 안에서 동작하는 다이어그램 편집기입니다. 기존 Visio(VSDX) 문서를 편집 가능한 형태로 가져오고, AI 도우미와 MCP 에이전트가 만든 그림도 사람이 이어서 고칠 수 있는 도형으로 다룹니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section section-rule" aria-labelledby="walkthrough-heading">
+      <div class="story-heading page-pad">
+        <p class="eyebrow">02 / System walkthrough</p>
+        <h2 id="walkthrough-heading">From one node<br />to the whole system.</h2>
+      </div>
+
+      <div class="story-layout page-pad" data-story>
+        <div class="story-steps">
+          {storySteps.map((step, index) => (
+            <section
+              class:list={["story-step", { "is-active": index === 0 }]}
+              data-story-step={step.id}
+              tabindex="0"
+            >
+              <span>{step.index}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <small>Scroll to explore</small>
+            </section>
+          ))}
+        </div>
+
+        <div class="story-stage" aria-live="polite">
+          {storySteps.map((step, index) => (
+            <div class:list={["story-visual", { "is-active": index === 0 }]} data-story-visual={step.id}>
+              <CaptureFrame
+                slot={step.slot}
+                filename={step.filename}
+                title={step.frameTitle}
+                state={step.state}
+                src={step.src}
+                alt={step.alt}
+                tone={index === 2 ? "amber" : index === 3 ? "blue" : "sage"}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="decisions-section page-pad section-rule" aria-labelledby="decisions-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">03 / Key decisions</p>
+          <h2 id="decisions-heading">AI that edits,<br />not AI that paints</h2>
+        </div>
+        <p>AI가 만든 결과를 사람이 믿고 이어서 고칠 수 있게 하기 위해 내린 네 가지 판단입니다.</p>
+      </div>
+      <ol class="decision-list">
+        {decisions.map((decision) => (
+          <li>
+            <header><span>{decision.index}</span><h3>{decision.title}</h3></header>
+            <div><small>Problem</small><p>{decision.problem}</p></div>
+            <div><small>Choice</small><p>{decision.choice}</p></div>
+            <div><small>Result</small><p>{decision.result}</p></div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="architecture-section page-pad section-rule" aria-labelledby="architecture-heading">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">04 / Architecture</p>
+          <h2 id="architecture-heading">One document model,<br />three ways in</h2>
+        </div>
+        <p>사람의 편집, AI 도우미, 외부 MCP 에이전트가 모두 같은 문서 모델과 검증 규칙을 거쳐 저장됩니다.</p>
+      </div>
+      <figure class="architecture-figure">
+        <div class="architecture-figure__heading">
+          <span>System boundary</span>
+          <span>Editor · AI · agents → one model</span>
+        </div>
+        <svg viewBox="0 0 1040 460" role="img" aria-labelledby="flowgram-arch-title flowgram-arch-desc">
+          <title id="flowgram-arch-title">Flowgram 시스템 구조</title>
+          <desc id="flowgram-arch-desc">브라우저 편집기와 외부 MCP 에이전트가 Node 브리지 서버를 거쳐 문서 모델 검증 후 MySQL에 저장되고, AI 도우미는 LLM 공급자에게 편집 도구를 제공하는 구조</desc>
+          <defs>
+            <marker id="flowgram-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <g class="architecture-lines" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#flowgram-arrow)">
+            <path d="M210 160 H320" />
+            <path d="M210 360 H265 V250 H320" />
+            <path d="M590 140 H720" />
+            <path d="M590 270 H655 V370 H720" />
+          </g>
+          <g class="architecture-node architecture-node--client">
+            <rect x="30" y="80" width="180" height="150" rx="4" />
+            <text x="55" y="120" class="node-kicker">CLIENT</text>
+            <text x="55" y="160" class="node-title">Editor</text>
+            <text x="55" y="190" class="node-copy">React · SVG canvas</text>
+            <text x="55" y="212" class="node-copy">AI drawer · export</text>
+          </g>
+          <g class="architecture-node">
+            <rect x="30" y="290" width="180" height="140" rx="4" />
+            <text x="55" y="330" class="node-kicker">AGENTS</text>
+            <text x="55" y="368" class="node-title">MCP</text>
+            <text x="55" y="398" class="node-copy">stdio · request queue</text>
+          </g>
+          <g class="architecture-node architecture-node--core">
+            <rect x="320" y="60" width="270" height="280" rx="4" />
+            <text x="350" y="100" class="node-kicker">SERVER</text>
+            <text x="350" y="140" class="node-title">Node bridge</text>
+            <text x="350" y="172" class="node-copy">Entra ID SSO · sharing</text>
+            <line x1="350" y1="194" x2="560" y2="194" />
+            <text x="350" y="226" class="node-copy">parseDiagram validation</text>
+            <text x="350" y="250" class="node-copy">AI tool loop · layout check</text>
+            <text x="350" y="274" class="node-copy">VSDX · Mermaid import</text>
+            <text x="350" y="298" class="node-copy">Integration API</text>
+          </g>
+          <g class="architecture-node">
+            <rect x="720" y="40" width="290" height="200" rx="4" />
+            <text x="750" y="80" class="node-kicker">EXTERNAL</text>
+            <text x="750" y="120" class="node-title">Providers</text>
+            <text x="750" y="154" class="node-copy">Anthropic · OpenAI · Bedrock</text>
+            <text x="750" y="178" class="node-copy">Confluence (user OAuth)</text>
+          </g>
+          <g class="architecture-node">
+            <rect x="720" y="300" width="290" height="130" rx="4" />
+            <text x="750" y="340" class="node-kicker">STATE</text>
+            <text x="750" y="378" class="node-title">MySQL · Aurora</text>
+            <text x="750" y="404" class="node-copy">Documents · revisions · shares</text>
+          </g>
+        </svg>
+        <figcaption>AI 응답은 서버의 작업용 사본에서만 실행되고, 사용자가 적용한 결과만 revision 비교를 거쳐 저장됩니다.</figcaption>
+      </figure>
+    </section>
+
+    <section class="evidence-section page-pad section-rule">
+      <div class="section-heading section-heading--wide">
+        <div>
+          <p class="eyebrow">05 / Evidence</p>
+          <h2>What is implemented</h2>
+        </div>
+      </div>
+      <dl class="evidence-grid">
+        <div><dt>736</dt><dd>Official AWS icons</dd><small>Searchable · self-contained in documents</small></div>
+        <div><dt>10</dt><dd>Editable templates</dd><small>Flowchart · architecture · sequence · lifecycle</small></div>
+        <div><dt>100</dt><dd>Undo history steps</dd><small>Transaction-based history</small></div>
+        <div><dt>04</dt><dd>Ways to bring diagrams in</dd><small>VSDX · Mermaid · Flow file · AI / MCP</small></div>
+      </dl>
+      <p class="evidence-note">사내 서비스로 운영 중이며, 이 페이지의 화면은 기본 템플릿과 공개용 가상 예제로만 구성했습니다.</p>
+    </section>
+
+    <a class="next-project page-pad section-rule" href={import.meta.env.BASE_URL}>
+      <span class="eyebrow">Back to index</span>
+      <strong>Explore selected systems</strong>
+      <i aria-hidden="true">↗</i>
+    </a>
+  </article>
+
+  <script>
+    const story = document.querySelector("[data-story]");
+    if (story) {
+      const steps = [...story.querySelectorAll<HTMLElement>("[data-story-step]")];
+      const visuals = [...story.querySelectorAll<HTMLElement>("[data-story-visual]")];
+      const activate = (id: string) => {
+        steps.forEach((step) => step.classList.toggle("is-active", step.dataset.storyStep === id));
+        visuals.forEach((visual) => visual.classList.toggle("is-active", visual.dataset.storyVisual === id));
+      };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          const id = (visible?.target as HTMLElement | undefined)?.dataset.storyStep;
+          if (id) activate(id);
+        },
+        { rootMargin: "-30% 0px -45%", threshold: [0.15, 0.4, 0.7] },
+      );
+      steps.forEach((step) => {
+        observer.observe(step);
+        step.addEventListener("focus", () => activate(step.dataset.storyStep || ""));
+      });
+    }
+  </script>
+</BaseLayout>

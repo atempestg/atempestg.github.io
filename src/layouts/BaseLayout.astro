@@ -1,0 +1,95 @@
+---
+import SiteSidebar from "../components/SiteSidebar.astro";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  currentProject?: string;
+  pageKind?: "home" | "project";
+}
+
+const {
+  title,
+  description,
+  currentProject,
+  pageKind = "project",
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} type="image/svg+xml" />
+    <title>{title}</title>
+    <script is:inline>
+      const storedTheme = localStorage.getItem("portfolio-theme");
+      const preferredTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = storedTheme || preferredTheme;
+    </script>
+  </head>
+  <body data-page-kind={pageKind}>
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <div class="site-shell">
+      <SiteSidebar currentProject={currentProject} />
+      <div class="page-column">
+        <header class="mobile-header">
+          <a class="mobile-brand" href={import.meta.env.BASE_URL} aria-label="포트폴리오 홈">
+            <span>AT</span>
+            <small>Product · Systems</small>
+          </a>
+          <div class="mobile-actions">
+            <button class="theme-toggle" type="button" aria-label="색상 테마 전환">
+              <span class="theme-toggle__sun" aria-hidden="true">☼</span>
+              <span class="theme-toggle__moon" aria-hidden="true">◐</span>
+            </button>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-sidebar">
+              Projects <span aria-hidden="true">＋</span>
+            </button>
+          </div>
+        </header>
+        <main id="main-content">
+          <slot />
+        </main>
+        <footer class="site-footer">
+          <span>Product engineering portfolio</span>
+          <span>Designed for the web · 2026</span>
+        </footer>
+      </div>
+    </div>
+
+    <script is:inline>
+      const root = document.documentElement;
+      const themeButtons = document.querySelectorAll(".theme-toggle");
+      themeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          root.dataset.theme = next;
+          localStorage.setItem("portfolio-theme", next);
+        });
+      });
+
+      const menuButton = document.querySelector(".menu-toggle");
+      const sidebar = document.querySelector("#site-sidebar");
+      const closeButton = document.querySelector(".sidebar-close");
+      const closeMenu = () => {
+        sidebar?.classList.remove("is-open");
+        menuButton?.setAttribute("aria-expanded", "false");
+      };
+      menuButton?.addEventListener("click", () => {
+        const open = sidebar?.classList.toggle("is-open") ?? false;
+        menuButton.setAttribute("aria-expanded", String(open));
+      });
+      closeButton?.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeMenu();
+      });
+    </script>
+  </body>
+</html>

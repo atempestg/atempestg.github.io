@@ -1,0 +1,75 @@
+---
+interface Props {
+  currentProject?: string;
+}
+
+const { currentProject } = Astro.props;
+const projects = [
+  { slug: "agentic-devops", index: "01", title: "Agentic DevOps", tag: "Control plane", ready: false },
+  { slug: "vibecoders", index: "02", title: "VibeCoders", tag: "Learning platform", ready: false },
+  { slug: "ai-note", index: "03", title: "AI Note", tag: "AI meeting assistant", ready: true },
+  { slug: "personal-hub", index: "04", title: "Personal Hub", tag: "Link-first start page", ready: true },
+  { slug: "assist-agent", index: "05", title: "Assist Agent", tag: "Local-first agent", ready: false },
+  { slug: "file-browser", index: "06", title: "File Browser", tag: "Finder alternative", ready: true },
+  { slug: "flowgram", index: "07", title: "Flowgram", tag: "Diagram workspace", ready: true },
+];
+---
+
+<aside class="site-sidebar" id="site-sidebar">
+  <div class="sidebar-top">
+    <a class="brand" href={import.meta.env.BASE_URL} aria-label="포트폴리오 홈">
+      <span class="brand-mark">AT</span>
+      <span class="brand-copy">
+        <strong>Product · Systems</strong>
+        <small>Selected work / 2026</small>
+      </span>
+    </a>
+    <button class="sidebar-close" type="button" aria-label="프로젝트 메뉴 닫기">×</button>
+  </div>
+
+  <div class="sidebar-intro">
+    <p class="eyebrow">Portfolio index</p>
+    <p>필요해서 직접 만든 도구와 제품의 설계·구현 기록입니다.</p>
+  </div>
+
+  <nav class="project-nav" aria-label="프로젝트">
+    <p class="project-nav__label">Selected systems</p>
+    <ol>
+      {projects.map((project) => (
+        <li>
+          {project.ready ? (
+            <a
+              href={`${import.meta.env.BASE_URL}projects/${project.slug}/`}
+              class:list={["project-link", { "is-current": currentProject === project.slug }]}
+              aria-current={currentProject === project.slug ? "page" : undefined}
+            >
+              <span class="project-link__index">{project.index}</span>
+              <span class="project-link__copy">
+                <strong>{project.title}</strong>
+                <small>{project.tag}</small>
+              </span>
+              <span class="project-link__arrow" aria-hidden="true">↗</span>
+            </a>
+          ) : (
+            <span class="project-link is-pending" aria-label={`${project.title}, 준비 중`}>
+              <span class="project-link__index">{project.index}</span>
+              <span class="project-link__copy">
+                <strong>{project.title}</strong>
+                <small>{project.tag}</small>
+              </span>
+              <span class="project-link__status">Soon</span>
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href={`${import.meta.env.BASE_URL}#about`}>About</a>
+    <button class="theme-toggle" type="button" aria-label="색상 테마 전환">
+      <span class="theme-toggle__sun" aria-hidden="true">☼ Light</span>
+      <span class="theme-toggle__moon" aria-hidden="true">◐ Dark</span>
+    </button>
+  </div>
+</aside>
